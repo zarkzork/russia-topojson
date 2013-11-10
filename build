@@ -1,0 +1,16 @@
+#!/bin/bash
+set -e
+
+docker_opts=$@
+docker_wrap(){
+    docker ${docker_opts} $@
+}
+
+rm -f moscow.json russia.json
+
+docker_wrap build -t zarkzork/geo .
+docker_id=$(docker_wrap run -d zarkzork/geo)
+port=$(docker_wrap inspect ${docker_id} | jq '.[0].NetworkSettings.PortMapping.Tcp["8080"]' | xargs echo -n)
+wget localhost:${port}/russia.json
+wget localhost:${port}/moscow.json
+docker_wrap kill ${docker_id} 1>/dev/null
